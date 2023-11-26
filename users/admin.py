@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import User, Weight, MyAddress, GymAddress
 from django.contrib.auth.admin import UserAdmin
 
 # Register your models here.
@@ -36,3 +36,16 @@ class CustomUserAdmin(UserAdmin):
     # )
 	
     readonly_fields = ("date_joined", "last_login",)
+
+@admin.register(Weight)
+class WeightAdmin(admin.ModelAdmin):  
+    list_display = ('id', 'sport_name', 'gender', 'min_weight', 'max_weight',)
+    list_filter = ('sport_name', 'gender',)
+    
+@admin.register(MyAddress)
+class MyAddressAdmin(admin.ModelAdmin):  
+    list_display = ('id', 'user', 'address_name', 'latitude', 'longitude',)
+    
+@admin.register(GymAddress)
+class GymAddressAdmin(admin.ModelAdmin):  
+    list_display = ('id', 'user', 'address_name', 'latitude', 'longitude',)

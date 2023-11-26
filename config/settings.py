@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import json
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,17 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['127.0.0.1','localhost']
-
-import json
 ROOT_DIR = os.path.dirname(BASE_DIR)
 SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
 secrets = json.loads(open(SECRET_BASE_FILE).read())
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
+SERVER_IP = secrets["SERVER"]['IP']
+SERVER_PORT = secrets["SERVER"]['PORT']
+
+
+ALLOWED_HOSTS = ['127.0.0.1','localhost', SERVER_IP]
+
+#https redirect
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SECRET_KEY = secrets['SECRET_KEY']
 KAKAO_REST_API_KEY = secrets['KAKAO']["REST_API_KEY"]
@@ -50,6 +57,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    #api 문서
+    'drf_yasg',
     #유저 인증
     "rest_framework",
     'rest_framework_simplejwt',
@@ -173,6 +182,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -235,8 +245,9 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_SAMESITE': 'Lax', # TODO: Modify to Lax
 }
 
+
 # CORS 관련 추가
-CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:3000','http://localhost:3000', 'https://make.mycookie.site', 'https://mycookie.site']
+CORS_ALLOWED_ORIGINS = ['http://127.0.0.1:3000','http://localhost:3000', f'https://{SERVER_IP}:{SERVER_PORT}']
 CORS_ALLOW_CREDENTIALS = True #쿠키가 cross-site HTTP 요청에 포함될 수 있다
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -246,7 +257,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
-CSRF_TRUSTED_ORIGINS = ['https://mycookie.site']
+CSRF_TRUSTED_ORIGINS = [f'https://{SERVER_IP}:{SERVER_PORT}']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 #커스텀유저
@@ -284,8 +295,8 @@ LOGGING = {
             'level'     : 'DEBUG',   
             'class'     : 'logging.FileHandler',
             'filename'  : f'{BASE_DIR}/query.log',
-            'formatter' : 'verbose',
-            'filters': ['require_debug_false'],
+            'formatter' : 'verbose'
+            # 'filters': ['require_debug_false'],
         },
         'file_server': {
             'level': 'INFO',
@@ -293,8 +304,8 @@ LOGGING = {
             'filename': f'{BASE_DIR}/debug.log',
             'maxBytes': 1024*1024*5,  # 5 MB
             'backupCount': 5,
-            'formatter': 'standard',
-            'filters': ['require_debug_false'],
+            'formatter': 'standard'
+            # 'filters': ['require_debug_false'],
         },
     },
     'loggers': {
