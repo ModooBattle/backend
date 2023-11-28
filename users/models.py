@@ -4,25 +4,15 @@ from django.core.validators import RegexValidator
 import uuid
 
 
-class Weight(models.Model):
-    genderRegex = RegexValidator(regex = r'^[MF]{1}$', message='M 또는 F, (male or female)',code=412)
-    
-    sport_name = models.CharField(validators = [genderRegex], max_length=1, blank=False, null=False)
-    gender = models.CharField(validators = [genderRegex], max_length=1, blank=False, null=False)
-    min_weight = models.PositiveIntegerField(blank=False, null=False)
-    max_weight = models.PositiveIntegerField(blank=False, null=False)
+
+  
     
 class MyAddress(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='my_addr', blank=False, null=False)
-    address_name = models.CharField(max_length=150, blank=False, null=False)
+    user = models.OneToOneField('users.User',on_delete=models.CASCADE, blank=False, null=False)
+    address = models.CharField(max_length=50, blank=False, null=False)
     latitude = models.IntegerField(blank=False, null=False)
     longitude = models.IntegerField(blank=False, null=False)
     
-class GymAddress(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='gym_addr', blank=False, null=False)
-    address_name = models.CharField(max_length=150, blank=False, null=False)
-    latitude = models.IntegerField(blank=False, null=False)
-    longitude = models.IntegerField(blank=False, null=False)
      
 
 class User(AbstractUser):
@@ -37,7 +27,8 @@ class User(AbstractUser):
     age = models.CharField(validators = [ageRegex], max_length=2, blank=False, null=False)
     gender = models.CharField(validators = [genderRegex], max_length=1, blank=False, null=False)
     is_active = models.BooleanField(default=True, blank=True, null=False)
-    weight = models.ForeignKey('users.Weight', on_delete=models.PROTECT, null=True)
+    weight = models.ForeignKey('sports.Weight', on_delete=models.PROTECT, null=True)
+    gym = models.ForeignKey('sports.Gym', on_delete=models.PROTECT, null=True)
     yellow_card = models.PositiveIntegerField(default=0, blank=True, null=False)
     kakao_id = models.CharField(max_length=50, blank=False, null=False)
     uuid = models.UUIDField(default=uuid.uuid4, blank=False, null=False)

@@ -26,7 +26,7 @@ SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
 secrets = json.loads(open(SECRET_BASE_FILE).read())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 SERVER_IP = secrets["SERVER"]['IP']
 SERVER_PORT = secrets["SERVER"]['PORT']
@@ -70,7 +70,8 @@ INSTALLED_APPS = [
     #채팅
     # "channels"
     #앱
-    "users.apps.UsersConfig"
+    "users.apps.UsersConfig",
+    "sports.apps.SportsConfig"
 
 
 
@@ -293,15 +294,28 @@ LOGGING = {
     'handlers': {
         'file_db': {
             'level'     : 'DEBUG',   
-            'class'     : 'logging.FileHandler',
-            'filename'  : f'{BASE_DIR}/query.log',
+            'class'     : 'logging.handlers.RotatingFileHandler',
+            'filename'  : f'{BASE_DIR}/logs/query.log',
             'formatter' : 'verbose'
             # 'filters': ['require_debug_false'],
         },
-        'file_server': {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            'filters': ['require_debug_true']
+        },
+        "file_server_error": {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': f'{BASE_DIR}/debug.log',
+            'filename': f'{BASE_DIR}/logs/only_error.log',
+            'maxBytes': 1024*1024*5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'standard'
+        },
+        'file_server': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': f'{BASE_DIR}/logs/debug.log',
             'maxBytes': 1024*1024*5,  # 5 MB
             'backupCount': 5,
             'formatter': 'standard'
@@ -311,12 +325,12 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file_server'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'django.db.backends': {
-            'handlers' : ['file_db'],
+            'handlers' : ["file_db", "console"],
             'level'    : 'DEBUG',
-            'propagate': False,
+            # 'propagate': False,
         },
     },
 }

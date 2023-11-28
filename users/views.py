@@ -21,6 +21,9 @@ from drf_yasg             import openapi
 from .serializers import KakaoSerializer 
 from .schema import login_res_schema
 
+swagger_tag = '사용자'
+
+
 def get_tokens_for_user(user):
     
     refresh = RefreshToken.for_user(user)
@@ -87,7 +90,7 @@ def kakao_access(request):
 
 
 class KakaoLoginView(APIView) :
-    @swagger_auto_schema(tags=['데이터를 검색합니다.'], request_body=KakaoSerializer, responses=login_res_schema)
+    @swagger_auto_schema(tags=[swagger_tag], operation_summary='로그인', request_body=KakaoSerializer, responses=login_res_schema)
     def post(self, request):
         
         kakao_nickname, kakao_email = kakao_access(request)  
