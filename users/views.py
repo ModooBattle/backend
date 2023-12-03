@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import decorators, exceptions, permissions, status
@@ -12,9 +13,13 @@ from rest_framework_simplejwt import exceptions as jwt_exceptions
 from rest_framework_simplejwt import serializers as jwt_serializers
 from rest_framework_simplejwt import views as jwt_views
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenViewBase
 
 from config import settings
+from mylib import mysimplejwt
 from mylib.nickname import make_random_nickname
+from sports.models import Gym
+from sports.serializers import GymSerializer
 
 from . import serializers
 from .models import User
@@ -36,7 +41,6 @@ def get_tokens_for_user(user):
 def login(user):
     tokens = get_tokens_for_user(user)
     res = Response()
-    serializer = serializers.UserInfoSerializer(user)
 
     res.set_cookie(
         key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
@@ -47,7 +51,7 @@ def login(user):
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
     )
-    res.data = {"tokens": tokens, "user": serializer.data}
+    res.data = {"access": tokens["access"]}
 
     res.status = status.HTTP_200_OK
 
@@ -79,18 +83,23 @@ def kakao_access(request):
         "https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer ${access_token}"}
     )
 
-    kakao_nickname = user_info_response.json()["kakao_account"]["profile"]["nickname"]
     kakao_email = user_info_response.json()["kakao_account"]["email"]
 
-    return kakao_nickname, kakao_email
+    return kakao_email
 
 
 class KakaoLoginView(APIView):
     @swagger_auto_schema(
         tags=[swagger_tag], operation_summary="로그인", request_body=KakaoSerializer, responses=login_res_schema
     )
+    # @extend_schema(
+    #     tags=[swagger_tag],
+    #     summary="로그인",
+    #     request=KakaoSerializer,
+    #     responses=login_res_schema,
+    # )
     def post(self, request):
-        kakao_nickname, kakao_email = kakao_access(request)
+        kakao_email = kakao_access(request)
 
         try:
             user = User.objects.get(email=kakao_email)
@@ -106,7 +115,7 @@ class KakaoLoginView(APIView):
 
         except User.DoesNotExist:
             return Response(
-                data={"detail": "need to register", "kakao_nickname": kakao_nickname},
+                data={"detail": "need to register"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -145,7 +154,20 @@ class RegisterView(APIView):
         try:
             with transaction.atomic():
                 data = request.data.copy()
-                location = data.pop("location", None)
+                location = data.pop("location")
+                gym = data.pop("gym")
+
+                try:
+                    gym_id = Gym.objects.get(latitude=gym["latitude"], longitude=gym["longitude"])
+
+                except Gym.DoesNotExist:
+                    serializer = serializers.GymSerializer(data=gym)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+
+                    gym_id = serializer.data["id"]
+
+                data["gym"] = gym_id
 
                 serializer = serializers.UserRegisterSerializer(data=data)
                 serializer.is_valid(raise_exception=True)
@@ -163,3 +185,47 @@ class RegisterView(APIView):
         except Exception as ex:
             print(ex)
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
+    refresh = None
+
+    def validate(self, attrs):
+        attrs["refresh"] = self.context["request"].COOKIES.get("refresh")
+        if attrs["refresh"]:
+            # user_id = RefreshToken(attrs["refresh"])["user_id"]
+            # WebsocketConnect(user_id)
+            return super().validate(attrs)
+        else:
+            raise jwt_exceptions.InvalidToken("No valid token found in cookie 'refresh'")
+
+
+class CookieTokenRefreshView(mysimplejwt.TokenRefreshView):
+    serializer_class = CookieTokenRefreshSerializer
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        return super().finalize_response(request, response, *args, **kwargs)
+
+
+@decorators.permission_classes([permissions.IsAuthenticated])
+class LogoutView(APIView):
+    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "로그아웃"})
+    def post(self, request):
+        try:
+            print(request)
+            refreshToken = request.COOKIES.get("refresh")
+
+            token = RefreshToken(refreshToken)
+            token.blacklist()
+            res = Response()
+            res.delete_cookie(
+                key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"], domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"]
+            )
+            res.delete_cookie("X-CSRFToken")
+            res.delete_cookie("csrftoken")
+            # res["X-CSRFToken"]=None
+            res.data = {"Success": "Logout successfully"}
+
+            return res
+        except:
+            raise exceptions.ParseError("Invalid token")

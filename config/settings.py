@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # api 문서
     "drf_yasg",
+    # "drf_spectacular",
     # 유저 인증
     "rest_framework",
     "rest_framework_simplejwt",
@@ -75,7 +76,18 @@ INSTALLED_APPS = [
 
 CRONJOBS = []
 
-REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)}
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)
+    # "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# SPECTACULAR_SETTINGS = {
+#     "TITLE": "Your Project API",
+#     "DESCRIPTION": "Your project description",
+#     "VERSION": "1.0.0",
+#     "SERVE_INCLUDE_SCHEMA": False,
+#     # OTHER SETTINGS
+# }
 
 MIDDLEWARE = [
     # corsheaders
@@ -286,16 +298,7 @@ LOGGING = {
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "filters": ["require_debug_true"],
-        },
-        "file_server_error": {
-            "level": "INFO",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": f"{BASE_DIR}/logs/only_error.log",
-            "maxBytes": 1024 * 1024 * 5,  # 5 MB
-            "backupCount": 5,
-            "formatter": "standard",
-            "filters": ["require_debug_false"],
+            # "filters": ["require_debug_true"],
         },
         "file_server": {
             "level": "DEBUG",
@@ -309,9 +312,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": [
-                "file_server",
-            ],
+            "handlers": ["file_server", "console"],
             "level": "DEBUG",
             "propagate": False,
         },
@@ -323,6 +324,13 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    }
 }
 
 # Cache

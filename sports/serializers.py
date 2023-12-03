@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Sport, Weight
+from .models import Gym, Sport, Weight
 
 
 class WeightSerializer(serializers.ModelSerializer):
@@ -24,3 +24,9 @@ class SportsSerializer(serializers.ModelSerializer):
             "id",
             "name",
         )
+
+
+class GymSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gym
+        fields = "__all__"

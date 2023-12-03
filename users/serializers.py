@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from sports.serializers import GymSerializer
+
 from .models import Location, User
 
 
@@ -23,24 +25,17 @@ class NicknameQuerySerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     location = LocationRegisterSerializer()
+    gym = GymSerializer()
 
     class Meta:
         model = User
-        fields = ("username", "age", "gender", "years", "email", "weight", "location")
+        fields = ("username", "age", "gender", "years", "email", "weight", "location", "gym")
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            "id",
-            "username",
-            "age",
-            "gender",
-            "years",
-            "email",
-            "weight",
-        )
+        fields = ("id", "username", "age", "gender", "years", "email", "weight", "gym")
 
 
 class KakaoSerializer(serializers.Serializer):

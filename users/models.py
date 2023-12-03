@@ -6,10 +6,10 @@ from django.db import models
 
 
 class Location(models.Model):
-    user = models.OneToOneField("users.User", on_delete=models.CASCADE, blank=False, null=False)
-    address = models.CharField(max_length=50, blank=False, null=False)
-    latitude = models.IntegerField(blank=False, null=False)
-    longitude = models.IntegerField(blank=False, null=False)
+    user = models.OneToOneField("users.User", on_delete=models.CASCADE, blank=False, null=False, help_text="사용자아이디")
+    address = models.CharField(max_length=50, blank=False, null=False, help_text="도로명주소 또는 지번주소")
+    latitude = models.IntegerField(blank=False, null=False, help_text="위도")
+    longitude = models.IntegerField(blank=False, null=False, help_text="경도")
 
 
 class User(AbstractUser):
@@ -22,15 +22,15 @@ class User(AbstractUser):
     username = models.CharField(
         validators=[usernameRegex], help_text="닉네임", max_length=15, unique=True, blank=False, null=False
     )
-    age = models.CharField(validators=[ageRegex], max_length=2, blank=False, null=False)
-    gender = models.CharField(validators=[genderRegex], max_length=1, blank=False, null=False)
-    is_active = models.BooleanField(default=True, blank=True, null=False)
-    weight = models.ForeignKey("sports.Weight", on_delete=models.PROTECT, null=True)
+    age = models.CharField(validators=[ageRegex], max_length=2, blank=False, null=False, help_text="연령")
+    gender = models.CharField(validators=[genderRegex], max_length=1, blank=False, null=False, help_text="성별")
+    is_active = models.BooleanField(default=True, blank=True, null=False, help_text="유저 상태(활성화 여부)")
+    weight = models.ForeignKey("sports.Weight", on_delete=models.PROTECT, null=True, help_text="체급아이디")
     years = models.PositiveIntegerField(
-        blank=False, null=False, validators=[MinValueValidator(1), MaxValueValidator(50)]
+        blank=False, null=False, validators=[MinValueValidator(1), MaxValueValidator(50)], help_text="스포츠경력"
     )
-    gym = models.ForeignKey("sports.Gym", on_delete=models.PROTECT, null=True)
-    yellow_card = models.PositiveIntegerField(default=0, blank=True, null=False)
+    gym = models.ForeignKey("sports.Gym", on_delete=models.PROTECT, null=True, help_text="체육관아이디")
+    yellow_card = models.PositiveIntegerField(default=0, blank=True, null=False, help_text="유효신고횟수")
     # kakao_id = models.CharField(max_length=50, blank=False, null=False)
     uuid = models.UUIDField(default=uuid.uuid4, blank=False, null=False)
 
