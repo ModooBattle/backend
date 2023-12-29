@@ -11,7 +11,7 @@ class CustomUserAdmin(UserAdmin):
         (
             "Profile",
             {
-                "fields": ("username",),
+                "fields": ("username", "email", "age", "gender", "years", "gym", "current_location", "weight"),
                 "classes": ("wide",),
             },
         ),
@@ -22,6 +22,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "yellow_card"
                     # "user_permissions",
                 ),
             },
@@ -34,38 +35,22 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    list_display = (
-        "id",
-        "username",
-        "is_superuser",
-        "is_staff",
-        "age",
-        "gender",
-    )
-    list_filter = (
-        "is_superuser",
-        "is_staff",
-        "age",
-        "gender",
-    )
-    search_fields = ("username",)
+    list_display = ("id", "is_superuser", "username", "email", "age", "gender", "date_joined", "last_login")
+    list_filter = ("is_superuser", "is_staff", "age", "gender", "yellow_card", "gym", "weight", "years")
+    search_fields = ("username", "email")
     ordering = ("id",)
     # filter_horizontal = (
     #     "groups",
     #     "user_permissions",
     # )
 
-    readonly_fields = (
-        "date_joined",
-        "last_login",
-    )
+    readonly_fields = ("date_joined", "last_login", "uuid")
 
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "user",
         "address",
         "latitude",
         "longitude",

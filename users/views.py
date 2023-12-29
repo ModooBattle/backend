@@ -1,5 +1,8 @@
+import json
+
 import requests
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
@@ -24,7 +27,8 @@ from sports.serializers import GymSerializer
 from . import serializers
 from .models import User
 from .schema import login_res_schema, random_nickname_res_schema
-from .serializers import KakaoSerializer, UserSerializer
+
+# from .serializers import KakaoSerializer, UserSerializer
 
 swagger_tag = "사용자"
 
@@ -90,7 +94,10 @@ def kakao_access(request):
 
 class KakaoLoginView(APIView):
     @swagger_auto_schema(
-        tags=[swagger_tag], operation_summary="로그인", request_body=KakaoSerializer, responses=login_res_schema
+        tags=[swagger_tag],
+        operation_summary="로그인",
+        request_body=serializers.KakaoSerializer,
+        responses=login_res_schema,
     )
     # @extend_schema(
     #     tags=[swagger_tag],
@@ -115,7 +122,7 @@ class KakaoLoginView(APIView):
 
         except User.DoesNotExist:
             return Response(
-                data={"detail": "need to register"},
+                data={"detail": "need to register", "email": kakao_email},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -147,7 +154,7 @@ class RegisterView(APIView):
     @swagger_auto_schema(
         tags=[swagger_tag],
         operation_summary="회원가입",
-        request_body=UserSerializer,
+        request_body=serializers.UserSerializer,
         responses={201: "회원가입 완료", 400: "실패"},
     )
     def post(self, request):
@@ -158,7 +165,9 @@ class RegisterView(APIView):
                 gym = data.pop("gym")
 
                 try:
-                    gym_id = Gym.objects.get(latitude=gym["latitude"], longitude=gym["longitude"])
+                    gym_id = Gym.objects.get(
+                        name=gym["name"], sport=gym["sport"], latitude=gym["latitude"], longitude=gym["longitude"]
+                    ).id
 
                 except Gym.DoesNotExist:
                     serializer = serializers.GymSerializer(data=gym)
@@ -169,22 +178,23 @@ class RegisterView(APIView):
 
                 data["gym"] = gym_id
 
+                serializer = serializers.LocationSerializer(data=location)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+                location_id = serializer.data["id"]
+
+                data["current_location"] = location_id
+
                 serializer = serializers.UserRegisterSerializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
 
-                user_id = serializer.data["id"]
-
-                location["user"] = user_id
-
-                serializer = serializers.LocationSerializer(data=location)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
             return Response(status=status.HTTP_201_CREATED)
 
-        except Exception as ex:
-            print(ex)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ex:
+            print(ex.as_json)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.as_json)
 
 
 class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
@@ -209,7 +219,7 @@ class CookieTokenRefreshView(mysimplejwt.TokenRefreshView):
 
 @decorators.permission_classes([permissions.IsAuthenticated])
 class LogoutView(APIView):
-    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "로그아웃"})
+    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "로그아웃", 401: "권한없음"})
     def post(self, request):
         try:
             print(request)

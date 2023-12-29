@@ -4,9 +4,11 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
-from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
+from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES, JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings
+
+from users.schema import access_res_schema
 
 swagger_tag = "사용자"
 
@@ -42,17 +44,25 @@ class TokenViewBase(generics.GenericAPIView):
     @swagger_auto_schema(
         tags=[swagger_tag],
         operation_summary="액세스토큰 재발급",
-        responses={200: "재발급", 401: "권한없음"},
+        responses=access_res_schema,
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
 
         try:
             serializer.is_valid(raise_exception=True)
+            auth = JWTAuthentication()
+            validated_token = auth.get_validated_token(serializer.validated_data["access"])
+            user = auth.get_user(validated_token)
+            username = user.__dict__["username"]
+            result = serializer.validated_data
+
+            result["username"] = username
+
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class TokenObtainPairView(TokenViewBase):
