@@ -1,10 +1,19 @@
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import decorators, exceptions, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Sport, Weight
-from .serializers import SportsSerializer, WeightQuerySerializer, WeightSerializer
+from users.models import Location
+from users.serializers import UserGymListSerializer
+
+from .models import Gym, Sport, Weight
+from .serializers import (
+    SportsSerializer,
+    UserGymListQuerySerializer,
+    WeightQuerySerializer,
+    WeightSerializer,
+)
 
 # from .schema import log
 
@@ -35,6 +44,38 @@ class WeightListView(APIView):
         try:
             weight_list = Weight.objects.filter(sport=sport, gender=gender)
             serializer = WeightSerializer(weight_list, many=True)
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        except Weight.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND, data="this weight list does not exist")
+
+
+@decorators.permission_classes([permissions.IsAuthenticated])
+class GymListView(APIView):
+    @swagger_auto_schema(
+        tags=[swagger_tag],
+        operation_summary="체육관리스트",
+        query_serializer=UserGymListQuerySerializer,
+        responses={200: "ok", 401: "unauthorized"},
+    )
+    def get(self, request):
+        distance_limit = int(request.GET["distance_limit"])
+        page_no = int(request.GET["page_no"])
+        length = int(request.GET["length"])
+
+        start = length * (page_no - 1)
+
+        sport_id = request.user.sport_id
+        current_location = request.user.user_location.id
+        current_location = Location.objects.get(id=current_location)
+        current_latitude = current_location.latitude
+        current_longitude = current_location.longitude
+
+        try:
+            gym_list = Gym.objects.raw(
+                f"""SELECT *, ROUND(ST_Distance_Sphere(POINT({current_longitude},{current_latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} ORDER BY distance ASC LIMIT {start}, {length}"""
+            )
+
+            serializer = UserGymListSerializer(gym_list, many=True)
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         except Weight.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data="this weight list does not exist")

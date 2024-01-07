@@ -54,10 +54,13 @@ class TokenViewBase(generics.GenericAPIView):
             auth = JWTAuthentication()
             validated_token = auth.get_validated_token(serializer.validated_data["access"])
             user = auth.get_user(validated_token)
-            username = user.__dict__["username"]
+
+            username = user.username
+            current_location = user.user_location.address
             result = serializer.validated_data
 
             result["username"] = username
+            result["current_location"] = current_location
 
         except TokenError as e:
             raise InvalidToken(e.args[0])

@@ -17,6 +17,12 @@ class WeightQuerySerializer(serializers.ModelSerializer):
         fields = ("sport_id", "gender")
 
 
+class UserGymListQuerySerializer(serializers.Serializer):
+    distance_limit = serializers.IntegerField(help_text="거리km 이하")
+    page_no = serializers.IntegerField(help_text="페이지 No")
+    length = serializers.IntegerField(help_text="페이지 당 데이터 수")
+
+
 class SportsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sport

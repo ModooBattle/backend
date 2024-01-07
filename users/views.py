@@ -1,5 +1,3 @@
-import json
-
 import requests
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -22,13 +20,10 @@ from config import settings
 from mylib import mysimplejwt
 from mylib.nickname import make_random_nickname
 from sports.models import Gym
-from sports.serializers import GymSerializer
 
 from . import serializers
 from .models import User
-from .schema import login_res_schema, random_nickname_res_schema
-
-# from .serializers import KakaoSerializer, UserSerializer
+from .schema import login_res_schema, random_nickname_res_schema, register_res_schema
 
 swagger_tag = "사용자"
 
@@ -44,6 +39,9 @@ def get_tokens_for_user(user):
 
 def login(user):
     tokens = get_tokens_for_user(user)
+    username = user.username
+    current_location = user.user_location.address
+
     res = Response()
 
     res.set_cookie(
@@ -55,7 +53,7 @@ def login(user):
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
     )
-    res.data = {"access": tokens["access"]}
+    res.data = {"access": tokens["access"], "username": username, "current_location": current_location}
 
     res.status = status.HTTP_200_OK
 
@@ -155,7 +153,7 @@ class RegisterView(APIView):
         tags=[swagger_tag],
         operation_summary="회원가입",
         request_body=serializers.UserSerializer,
-        responses={201: "회원가입 완료", 400: "실패"},
+        responses=register_res_schema,
     )
     def post(self, request):
         try:
@@ -163,6 +161,7 @@ class RegisterView(APIView):
                 data = request.data.copy()
                 location = data.pop("location")
                 gym = data.pop("gym")
+                data["sport"] = gym["sport"]
 
                 try:
                     gym_id = Gym.objects.get(
@@ -178,23 +177,44 @@ class RegisterView(APIView):
 
                 data["gym"] = gym_id
 
-                serializer = serializers.LocationSerializer(data=location)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-
-                location_id = serializer.data["id"]
-
-                data["current_location"] = location_id
-
                 serializer = serializers.UserRegisterSerializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
 
-            return Response(status=status.HTTP_201_CREATED)
+                user_id = serializer.data["id"]
+
+                location["user"] = user_id
+
+                serializer = serializers.LocationSerializer(data=location)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+                user = User.objects.get(id=user_id)
+                user.last_login = timezone.now()
+                user.save()
+
+                tokens = get_tokens_for_user(user)
+                username = user.username
+                current_location = user.user_location.address
+                res = Response()
+
+                res.set_cookie(
+                    key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
+                    value=tokens["refresh"],
+                    expires=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
+                    domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
+                    secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+                    httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
+                    samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+                )
+                res.data = {"access": tokens["access"], "username": username, "current_location": current_location}
+
+                res.status = status.HTTP_201_CREATED
+
+            return res
 
         except ValidationError as ex:
-            print(ex.as_json)
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.as_json)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
@@ -219,10 +239,9 @@ class CookieTokenRefreshView(mysimplejwt.TokenRefreshView):
 
 @decorators.permission_classes([permissions.IsAuthenticated])
 class LogoutView(APIView):
-    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "로그아웃", 401: "권한없음"})
+    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "logout", 401: "unauthorized"})
     def post(self, request):
         try:
-            print(request)
             refreshToken = request.COOKIES.get("refresh")
 
             token = RefreshToken(refreshToken)

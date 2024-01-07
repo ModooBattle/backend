@@ -25,7 +25,7 @@ SECRET_BASE_FILE = os.path.join(BASE_DIR, "secrets.json")
 secrets = json.loads(open(SECRET_BASE_FILE).read())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 SERVER_IP = secrets["SERVER"]["IP"]
 SERVER_PORT = secrets["SERVER"]["PORT"]
@@ -267,8 +267,9 @@ AUTH_USER_MODEL = "users.User"
 
 
 # 쿼리기록
+# 쿼리기록
 LOGGING = {
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,
     "version": 1,
     "filters": {
         "require_debug_false": {
@@ -288,43 +289,46 @@ LOGGING = {
         },
     },
     "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+        },
         "file_db": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": f"{BASE_DIR}/logs/query.log",
+            "filename": BASE_DIR / "query.log",
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 1,
             "formatter": "verbose",
-            "filters": ["require_debug_true"],
-        },
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            # "filters": ["require_debug_true"],
+            "filters": ["require_debug_false"],
         },
         "file_server": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": f"{BASE_DIR}/logs/debug.log",
+            "filename": BASE_DIR / "debug.log",
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
-            "backupCount": 5,
+            "backupCount": 1,
             "formatter": "standard",
-            "filters": ["require_debug_false"],
+            "filters": ["require_debug_true"],
         },
     },
     "loggers": {
-        "django": {
+        # "django": {
+        #     "handlers": ["console", "file_error"],
+        #     # "level": "DEBUG",
+        # },
+        "django.request": {
             "handlers": ["file_server", "console"],
-            "level": "DEBUG",
-            "propagate": False,
+            # "level": "DEBUG",
         },
         "django.db.backends": {
-            "handlers": [
-                "file_db",
-            ],
+            "handlers": ["file_db"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
 }
+
 
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {

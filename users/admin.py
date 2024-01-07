@@ -11,7 +11,17 @@ class CustomUserAdmin(UserAdmin):
         (
             "Profile",
             {
-                "fields": ("username", "email", "age", "gender", "years", "gym", "current_location", "weight"),
+                "fields": (
+                    "username",
+                    "email",
+                    "age",
+                    "gender",
+                    "sport",
+                    "years",
+                    "gym",
+                    "user_location",
+                    "weight",
+                ),
                 "classes": ("wide",),
             },
         ),
@@ -35,8 +45,21 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    list_display = ("id", "is_superuser", "username", "email", "age", "gender", "date_joined", "last_login")
-    list_filter = ("is_superuser", "is_staff", "age", "gender", "yellow_card", "gym", "weight", "years")
+    list_display = (
+        "id",
+        "is_superuser",
+        "username",
+        "email",
+        "age",
+        "gender",
+        "sport",
+        "gym",
+        "weight",
+        "user_location",
+        "date_joined",
+        "last_login",
+    )
+    list_filter = ("is_superuser", "is_staff", "age", "sport", "gender", "yellow_card", "gym", "weight", "years")
     search_fields = ("username", "email")
     ordering = ("id",)
     # filter_horizontal = (
@@ -51,6 +74,7 @@ class CustomUserAdmin(UserAdmin):
 class LocationAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "user",
         "address",
         "latitude",
         "longitude",
