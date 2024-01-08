@@ -56,7 +56,10 @@ class TokenViewBase(generics.GenericAPIView):
             user = auth.get_user(validated_token)
 
             username = user.username
-            current_location = user.user_location.address
+            try:
+                current_location = user.user_location.address
+            except:
+                current_location = None
             result = serializer.validated_data
 
             result["username"] = username

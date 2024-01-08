@@ -64,15 +64,18 @@ class GymListView(APIView):
 
         start = length * (page_no - 1)
 
+        user_id = request.user.id
+
         sport_id = request.user.sport_id
-        current_location = request.user.user_location.id
-        current_location = Location.objects.get(id=current_location)
-        current_latitude = current_location.latitude
-        current_longitude = current_location.longitude
+
+        try:
+            current_location = Location.objects.get(user=user_id)
+        except Location.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Current location required")
 
         try:
             gym_list = Gym.objects.raw(
-                f"""SELECT *, ROUND(ST_Distance_Sphere(POINT({current_longitude},{current_latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} ORDER BY distance ASC LIMIT {start}, {length}"""
+                f"""SELECT *, ROUND(ST_Distance_Sphere(POINT({current_location.longitude},{current_location.latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} ORDER BY distance ASC LIMIT {start}, {length}"""
             )
 
             serializer = UserGymListSerializer(gym_list, many=True)

@@ -22,7 +22,7 @@ from mylib.nickname import make_random_nickname
 from sports.models import Gym
 
 from . import serializers
-from .models import User
+from .models import Location, User
 from .schema import login_res_schema, random_nickname_res_schema, register_res_schema
 
 swagger_tag = "사용자"
@@ -40,7 +40,10 @@ def get_tokens_for_user(user):
 def login(user):
     tokens = get_tokens_for_user(user)
     username = user.username
-    current_location = user.user_location.address
+    try:
+        current_location = user.user_location.address
+    except:
+        current_location = None
 
     res = Response()
 
@@ -159,7 +162,7 @@ class RegisterView(APIView):
         try:
             with transaction.atomic():
                 data = request.data.copy()
-                location = data.pop("location")
+
                 gym = data.pop("gym")
                 data["sport"] = gym["sport"]
 
@@ -183,11 +186,11 @@ class RegisterView(APIView):
 
                 user_id = serializer.data["id"]
 
-                location["user"] = user_id
+                # location["user"] = user_id
 
-                serializer = serializers.LocationSerializer(data=location)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
+                # serializer = serializers.LocationSerializer(data=location)
+                # serializer.is_valid(raise_exception=True)
+                # serializer.save()
 
                 user = User.objects.get(id=user_id)
                 user.last_login = timezone.now()
@@ -195,7 +198,10 @@ class RegisterView(APIView):
 
                 tokens = get_tokens_for_user(user)
                 username = user.username
-                current_location = user.user_location.address
+                try:
+                    current_location = user.user_location.address
+                except:
+                    current_location = None
                 res = Response()
 
                 res.set_cookie(
@@ -215,6 +221,34 @@ class RegisterView(APIView):
 
         except ValidationError as ex:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@decorators.permission_classes([permissions.IsAuthenticated])
+class LocationView(APIView):
+    @swagger_auto_schema(
+        tags=[swagger_tag],
+        operation_summary="유저현재위치 등록/변경",
+        request_body=serializers.LocationSerializer,
+        responses={"200": "ok", "401": "unauthorized"},
+    )
+    def post(self, request):
+        data = request.data.copy()
+        user_id = request.user.id
+
+        data["user"] = user_id
+
+        try:
+            location = Location.objects.get(user=user_id)
+            serializer = serializers.LocationRegisterSerializer(location, data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        except Location.DoesNotExist:
+            serializer = serializers.LocationRegisterSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):

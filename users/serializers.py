@@ -6,10 +6,16 @@ from sports.serializers import GymSerializer, WeightSerializer
 from .models import Location, User
 
 
-class LocationSerializer(serializers.ModelSerializer):
+class LocationRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        exclude = ("id", "user")
 
 
 class NicknameQuerySerializer(serializers.ModelSerializer):
@@ -27,12 +33,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    location = LocationSerializer()
     gym = GymSerializer()
 
     class Meta:
         model = User
-        fields = ("username", "age", "gender", "years", "email", "weight", "location", "gym")
+        fields = ("username", "age", "gender", "years", "email", "weight", "gym")
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
