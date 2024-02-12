@@ -34,4 +34,6 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     path("api/user/", include("users.urls")),
     path("api/sport/", include("sports.urls")),
+    path("api/board/", include("boards.urls")),
+    path("api/chat/", include("chats.urls")),
 ]

@@ -21,6 +21,10 @@ class UserGymListQuerySerializer(serializers.Serializer):
     distance_limit = serializers.IntegerField(help_text="거리km 이하")
     page_no = serializers.IntegerField(help_text="페이지 No")
     length = serializers.IntegerField(help_text="페이지 당 데이터 수")
+    search_category = serializers.CharField(
+        required=False, max_length=20, help_text="검색 카테고리: name(체육관명), address(지번주소)"
+    )
+    search_value = serializers.CharField(required=False, max_length=20, help_text="검색 내용")
 
 
 class SportsSerializer(serializers.ModelSerializer):

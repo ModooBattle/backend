@@ -22,7 +22,7 @@ from mylib.nickname import make_random_nickname
 from sports.models import Gym
 
 from . import serializers
-from .models import Location, User
+from .models import BannedUser, Location, User
 from .schema import login_res_schema, random_nickname_res_schema, register_res_schema
 
 swagger_tag = "사용자"
@@ -39,11 +39,14 @@ def get_tokens_for_user(user):
 
 def login(user):
     tokens = get_tokens_for_user(user)
-    username = user.username
+
+    user_info = serializers.UserInfoSerializer(user)
+    user_info = user_info.data
     try:
-        current_location = user.user_location.address
+        user_info["current_location"] = user.user_location.address
+
     except:
-        current_location = None
+        user_info["current_location"] = None
 
     res = Response()
 
@@ -56,7 +59,7 @@ def login(user):
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
     )
-    res.data = {"access": tokens["access"], "username": username, "current_location": current_location}
+    res.data = {"access": tokens["access"], "user": user_info}
 
     res.status = status.HTTP_200_OK
 
@@ -106,7 +109,11 @@ class KakaoLoginView(APIView):
     #     request=KakaoSerializer,
     #     responses=login_res_schema,
     # )
+
     def post(self, request):
+        """
+        user 의 is_active 값을 조절하여 로그인을 차단할 수 있음(is_active를 false로 하면 차단)
+        """
         kakao_email = kakao_access(request)
 
         try:
@@ -159,12 +166,18 @@ class RegisterView(APIView):
         responses=register_res_schema,
     )
     def post(self, request):
+        """
+        BannedUser 를 등록하면 회원가입을 막을 수 있음
+        """
         try:
             with transaction.atomic():
                 data = request.data.copy()
 
                 gym = data.pop("gym")
                 data["sport"] = gym["sport"]
+
+                if BannedUser.objects.filter(email=data["email"]).exists():
+                    return Response(status=status.HTTP_403_FORBIDDEN, data="this email is exist in banned user list")
 
                 try:
                     gym_id = Gym.objects.get(
@@ -197,11 +210,7 @@ class RegisterView(APIView):
                 user.save()
 
                 tokens = get_tokens_for_user(user)
-                username = user.username
-                try:
-                    current_location = user.user_location.address
-                except:
-                    current_location = None
+                user_info = serializers.UserInfoSerializer(user)
                 res = Response()
 
                 res.set_cookie(
@@ -213,7 +222,7 @@ class RegisterView(APIView):
                     httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
                     samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
                 )
-                res.data = {"access": tokens["access"], "username": username, "current_location": current_location}
+                res.data = {"access": tokens["access"], "user": user_info.data}
 
                 res.status = status.HTTP_201_CREATED
 
@@ -221,6 +230,33 @@ class RegisterView(APIView):
 
         except ValidationError as ex:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(tags=[swagger_tag], operation_summary="회원탈퇴")
+    def delete(self, request):
+        with transaction.atomic():
+            user_id = request.user.id
+
+            user = User.objects.get(id=user_id)
+
+            if user.yellow_card == 3:
+                BannedUser.objects.create(email=user.email)
+
+            user.delete()
+
+            refreshToken = request.COOKIES.get("refresh")
+
+            token = RefreshToken(refreshToken)
+            token.blacklist()
+            res = Response()
+            res.delete_cookie(
+                key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"], domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"]
+            )
+            res.delete_cookie("X-CSRFToken")
+            res.delete_cookie("csrftoken")
+            # res["X-CSRFToken"]=None
+            res.data = {"Success": "Signout successfully"}
+
+            return res
 
 
 @decorators.permission_classes([permissions.IsAuthenticated])
@@ -292,3 +328,27 @@ class LogoutView(APIView):
             return res
         except:
             raise exceptions.ParseError("Invalid token")
+
+
+@decorators.permission_classes([permissions.IsAuthenticated])
+class AccuseView(APIView):
+    @swagger_auto_schema(
+        tags=[swagger_tag],
+        operation_summary="사용자 신고",
+        request_body=serializers.AccuseRequestSerializer,
+        responses={200: "ok", 401: "unauthorized"},
+    )
+    def patch(self, request):
+        """
+        사용자 신고 내역은 관리자 페이지에서 관리, 확인 시 admin_confirm 필드를 true로 설정하고
+        관리자에 판단에 따라 사용자에게 yellow_card를 부여하거나 is_active를 false로 바꿈
+        """
+        data = request.data.copy()
+        user_id = request.user.id
+        data["reporter"] = user_id
+
+        serializer = serializers.AccuseSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_200_OK)

@@ -53,7 +53,7 @@ class WeightListView(APIView):
 class GymListView(APIView):
     @swagger_auto_schema(
         tags=[swagger_tag],
-        operation_summary="체육관리스트",
+        operation_summary="체육관리스트 조회 및 검색",
         query_serializer=UserGymListQuerySerializer,
         responses={200: "ok", 401: "unauthorized"},
     )
@@ -61,6 +61,8 @@ class GymListView(APIView):
         distance_limit = int(request.GET["distance_limit"])
         page_no = int(request.GET["page_no"])
         length = int(request.GET["length"])
+        search_category = request.GET.get("search_category", None)
+        search_value = request.GET.get("search_value", None)
 
         start = length * (page_no - 1)
 
@@ -74,9 +76,26 @@ class GymListView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Current location required")
 
         try:
-            gym_list = Gym.objects.raw(
-                f"""SELECT *, ROUND(ST_Distance_Sphere(POINT({current_location.longitude},{current_location.latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} ORDER BY distance ASC LIMIT {start}, {length}"""
-            )
+            if search_category and search_value:
+                if search_category == "name":
+                    gym_list = Gym.objects.raw(
+                        f"SELECT *, ROUND(ST_Distance_Sphere(POINT({current_location.longitude},{current_location.latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} AND name LIKE '%%{search_value}%%' ORDER BY distance ASC LIMIT {start}, {length}"
+                    )
+
+                elif search_category == "address":
+                    gym_list = Gym.objects.raw(
+                        f"SELECT *, ROUND(ST_Distance_Sphere(POINT({current_location.longitude},{current_location.latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} AND address LIKE '%%{search_value}%%' ORDER BY distance ASC LIMIT {start}, {length}"
+                    )
+
+                else:
+                    return Response(
+                        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        data="search_category : name or address",
+                    )
+            else:
+                gym_list = Gym.objects.raw(
+                    f"""SELECT *, ROUND(ST_Distance_Sphere(POINT({current_location.longitude},{current_location.latitude}), POINT(longitude,latitude))/1000,1) AS distance FROM sports_gym HAVING distance <= {distance_limit} AND sport_id = {sport_id} ORDER BY distance ASC LIMIT {start}, {length}"""
+                )
 
             serializer = UserGymListSerializer(gym_list, many=True)
             return Response(status=status.HTTP_200_OK, data=serializer.data)

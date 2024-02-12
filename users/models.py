@@ -10,8 +10,18 @@ class Location(models.Model):
         "users.User", on_delete=models.CASCADE, related_name="user_location", blank=False, null=False, help_text="유저pk"
     )
     address = models.CharField(max_length=50, blank=False, null=False, help_text="도로명주소 또는 지번주소")
-    latitude = models.FloatField(blank=False, null=False, help_text="위도")
-    longitude = models.FloatField(blank=False, null=False, help_text="경도")
+    latitude = models.FloatField(
+        blank=False,
+        null=False,
+        validators=[MinValueValidator(-90.000000), MaxValueValidator(90.000000)],
+        help_text="위도",
+    )
+    longitude = models.FloatField(
+        blank=False,
+        null=False,
+        validators=[MinValueValidator(-180.000000), MaxValueValidator(180.000000)],
+        help_text="경도",
+    )
 
     def __str__(self):
         return self.address
@@ -51,3 +61,20 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class BannedUser(models.Model):
+    email = models.EmailField(help_text="메일주소", max_length=45, unique=True, blank=False, null=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, help_text="작성일")
+
+
+class Accuse(models.Model):
+    reporter = models.ForeignKey(
+        "users.User", related_name="accuse_reporter", on_delete=models.CASCADE, blank=True, null=False, help_text="신고자"
+    )
+    reported_user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, blank=False, null=False, help_text="신고당한자"
+    )
+    content = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, help_text="작성일")
+    admin_confirm = models.BooleanField(default=False, blank=True, null=False, help_text="관리자 확인 여부")

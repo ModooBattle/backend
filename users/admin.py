@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Location, User
+from .models import Accuse, BannedUser, Location, User
 
 
 # Register your models here.
@@ -19,7 +19,6 @@ class CustomUserAdmin(UserAdmin):
                     "sport",
                     "years",
                     "gym",
-                    "user_location",
                     "weight",
                 ),
                 "classes": ("wide",),
@@ -79,3 +78,17 @@ class LocationAdmin(admin.ModelAdmin):
         "latitude",
         "longitude",
     )
+
+
+@admin.register(BannedUser)
+class BannedAdmin(admin.ModelAdmin):
+    list_display = (
+        "email",
+        "created_at",
+    )
+
+
+@admin.register(Accuse)
+class AccuseAdmin(admin.ModelAdmin):
+    list_display = ("reporter", "reported_user", "created_at", "admin_confirm")
+    list_filter = ("admin_confirm",)

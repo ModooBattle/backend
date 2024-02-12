@@ -72,6 +72,8 @@ INSTALLED_APPS = [
     # 앱
     "users.apps.UsersConfig",
     "sports.apps.SportsConfig",
+    "boards.apps.BoardsConfig",
+    "chats.apps.ChatsConfig",
 ]
 
 CRONJOBS = []
@@ -300,7 +302,7 @@ LOGGING = {
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
             "backupCount": 1,
             "formatter": "verbose",
-            "filters": ["require_debug_false"],
+            "filters": ["require_debug_true"],
         },
         "file_server": {
             "level": "DEBUG",
@@ -309,7 +311,7 @@ LOGGING = {
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
             "backupCount": 1,
             "formatter": "standard",
-            "filters": ["require_debug_true"],
+            "filters": ["require_debug_false"],
         },
     },
     "loggers": {

@@ -6,8 +6,24 @@ login_res_schema = {
         examples={
             "application/json": {
                 "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAwOTk0MzE3LCJpYXQiOjE3MDA5OTA3MTcsImp0aSI6IjhmYzlmYTJiYjY1ZjQwOTZiNjAwMmNlNGRkMTM2ZjViIiwidXNlcl9pZCI6MX0.MSba1A62OUdY3l8wvsNuIyQFxTobBMO1TfZDQ67dB70",
-                "username": "고기먹는판다",
-                "current_location": "서울 금천구 시흥동 113-4",
+                "user": {
+                    "id": 4,
+                    "username": "테스트",
+                    "weight": {"id": 1, "name": "미니멈", "min_weight": 46},
+                    "age": "20",
+                    "gender": "F",
+                    "years": 4,
+                    "last_login": "2024-02-12T13:10:59.224503",
+                    "gym": {
+                        "id": 1,
+                        "name": "알로하복싱짐",
+                        "address": "서울 강남구 논현동 90-6",
+                        "latitude": 37.51558108296889,
+                        "longitude": 127.0350141685017,
+                        "sport": 1,
+                    },
+                    "current_location": "대구 동구 신암동 1881",
+                },
             }
         },
     ),
@@ -26,11 +42,27 @@ register_res_schema = {
         examples={
             "application/json": {
                 "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAwOTk0MzE3LCJpYXQiOjE3MDA5OTA3MTcsImp0aSI6IjhmYzlmYTJiYjY1ZjQwOTZiNjAwMmNlNGRkMTM2ZjViIiwidXNlcl9pZCI6MX0.MSba1A62OUdY3l8wvsNuIyQFxTobBMO1TfZDQ67dB70",
-                "username": "고기먹는판다",
-                "current_location": "서울 금천구 시흥동 113-4",
+                "user": {
+                    "id": 4,
+                    "username": "테스트",
+                    "weight": {"id": 1, "name": "미니멈", "min_weight": 46},
+                    "age": "20",
+                    "gender": "F",
+                    "years": 4,
+                    "last_login": "2024-02-12T13:10:59.224503",
+                    "gym": {
+                        "id": 1,
+                        "name": "알로하복싱짐",
+                        "address": "서울 강남구 논현동 90-6",
+                        "latitude": 37.51558108296889,
+                        "longitude": 127.0350141685017,
+                        "sport": 1,
+                    },
+                },
             }
         },
-    )
+    ),
+    "403": openapi.Response(description="차단된 유저", examples={"application/json": {"detail": "blocked user"}}),
 }
 
 access_res_schema = {
@@ -39,8 +71,24 @@ access_res_schema = {
         examples={
             "application/json": {
                 "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAwOTk0MzE3LCJpYXQiOjE3MDA5OTA3MTcsImp0aSI6IjhmYzlmYTJiYjY1ZjQwOTZiNjAwMmNlNGRkMTM2ZjViIiwidXNlcl9pZCI6MX0.MSba1A62OUdY3l8wvsNuIyQFxTobBMO1TfZDQ67dB70",
-                "username": "고기먹는판다",
-                "current_location": "서울 금천구 시흥동 113-4",
+                "user": {
+                    "id": 4,
+                    "username": "테스트",
+                    "weight": {"id": 1, "name": "미니멈", "min_weight": 46},
+                    "age": "20",
+                    "gender": "F",
+                    "years": 4,
+                    "last_login": "2024-02-12T13:24:47.579491",
+                    "gym": {
+                        "id": 1,
+                        "name": "알로하복싱짐",
+                        "address": "서울 강남구 논현동 90-6",
+                        "latitude": 37.51558108296889,
+                        "longitude": 127.0350141685017,
+                        "sport": 1,
+                    },
+                    "current_location": "대구 동구 신암동 1881",
+                },
             }
         },
     ),

@@ -9,6 +9,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings
 
 from users.schema import access_res_schema
+from users.serializers import UserInfoSerializer
 
 swagger_tag = "사용자"
 
@@ -55,15 +56,17 @@ class TokenViewBase(generics.GenericAPIView):
             validated_token = auth.get_validated_token(serializer.validated_data["access"])
             user = auth.get_user(validated_token)
 
-            username = user.username
+            user_info = UserInfoSerializer(user)
+            user_info = user_info.data
             try:
-                current_location = user.user_location.address
+                user_info["current_location"] = user.user_location.address
+
             except:
-                current_location = None
+                user_info["current_location"] = None
+
             result = serializer.validated_data
 
-            result["username"] = username
-            result["current_location"] = current_location
+            result["user"] = user_info
 
         except TokenError as e:
             raise InvalidToken(e.args[0])

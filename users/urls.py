@@ -9,4 +9,5 @@ urlpatterns = [
     path("random-nickname", views.RandomNicknameView.as_view()),
     path("signup", views.RegisterView.as_view()),
     path("current-location", views.LocationView.as_view()),
+    path("accuse", views.AccuseView.as_view()),
 ]

@@ -3,7 +3,7 @@ from rest_framework import serializers
 from sports.models import Gym
 from sports.serializers import GymSerializer, WeightSerializer
 
-from .models import Location, User
+from .models import Accuse, Location, User
 
 
 class LocationRegisterSerializer(serializers.ModelSerializer):
@@ -24,12 +24,21 @@ class NicknameQuerySerializer(serializers.ModelSerializer):
         fields = ("username",)
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
+class GymListUserInfoSerializer(serializers.ModelSerializer):
     weight = WeightSerializer()
 
     class Meta:
         model = User
         fields = ("id", "username", "weight", "age", "gender", "years", "last_login")
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    weight = WeightSerializer()
+    gym = GymSerializer()
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "weight", "age", "gender", "years", "last_login", "gym")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -61,4 +70,19 @@ class UserGymListSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_attributes_sorted(instance):
         users = instance.users.order_by("-last_login")
-        return UserInfoSerializer(users, many=True).data
+        return GymListUserInfoSerializer(users, many=True).data
+
+
+class AccuseRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Accuse
+        fields = (
+            "reported_user",
+            "content",
+        )
+
+
+class AccuseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Accuse
+        fields = "__all__"
