@@ -25,13 +25,13 @@ SECRET_BASE_FILE = os.path.join(BASE_DIR, "secrets.json")
 secrets = json.loads(open(SECRET_BASE_FILE).read())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-SERVER_IP = secrets["SERVER"]["IP"]
-SERVER_PORT = secrets["SERVER"]["PORT"]
+# SERVER_IP = secrets["SERVER"]["IP"]
+# SERVER_PORT = secrets["SERVER"]["PORT"]
 
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", SERVER_IP]
+ALLOWED_HOSTS = ["*"]
 
 # https redirect
 USE_X_FORWARDED_HOST = True
@@ -248,9 +248,7 @@ SIMPLE_JWT = {
 
 # CORS 관련 추가
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-    f"https://{SERVER_IP}:{SERVER_PORT}",
+    "*",
 ]
 CORS_ALLOW_CREDENTIALS = True  # 쿠키가 cross-site HTTP 요청에 포함될 수 있다
 CORS_ALLOW_METHODS = [
@@ -261,7 +259,7 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-CSRF_TRUSTED_ORIGINS = [f"https://{SERVER_IP}:{SERVER_PORT}"]
+CSRF_TRUSTED_ORIGINS = ["*"]
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # 커스텀유저
