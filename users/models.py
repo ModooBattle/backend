@@ -46,7 +46,9 @@ class User(AbstractUser):
         validators=[genderRegex], max_length=1, blank=False, null=False, help_text="성별 M(남), F(여)"
     )
     is_active = models.BooleanField(default=True, blank=True, null=False, help_text="유저 상태(활성화 여부)")
-    sport = models.ForeignKey("sports.Sport", on_delete=models.PROTECT, blank=False, null=False, help_text="종목아이디")
+    sport = models.ForeignKey(
+        "sports.Sport", on_delete=models.PROTECT, default=1, blank=False, null=False, help_text="종목아이디"
+    )
 
     weight = models.ForeignKey("sports.Weight", on_delete=models.PROTECT, blank=False, null=False, help_text="체급아이디")
     years = models.PositiveIntegerField(
