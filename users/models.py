@@ -41,21 +41,19 @@ class User(AbstractUser):
         help_text="닉네임(한글, 소문자, 숫자만 가능, 3-15자)",
     )
     email = models.EmailField(help_text="메일주소", max_length=45, unique=True, blank=False, null=False)
-    age = models.CharField(validators=[ageRegex], max_length=2, blank=False, null=False, help_text="연령, 10, 20, 30")
+    age = models.CharField(validators=[ageRegex], max_length=2, blank=False, null=True, help_text="연령, 10, 20, 30")
     gender = models.CharField(
-        validators=[genderRegex], max_length=1, blank=False, null=False, help_text="성별 M(남), F(여)"
+        validators=[genderRegex], max_length=1, blank=False, null=True, help_text="성별 M(남), F(여)"
     )
-    is_active = models.BooleanField(default=True, blank=True, null=False, help_text="유저 상태(활성화 여부)")
-    sport = models.ForeignKey(
-        "sports.Sport", on_delete=models.PROTECT, default=1, blank=False, null=False, help_text="종목아이디"
-    )
+    is_active = models.BooleanField(default=True, blank=True, null=True, help_text="유저 상태(활성화 여부)")
+    sport = models.ForeignKey("sports.Sport", on_delete=models.PROTECT, blank=False, null=True, help_text="종목아이디")
 
-    weight = models.ForeignKey("sports.Weight", on_delete=models.PROTECT, blank=False, null=False, help_text="체급아이디")
+    weight = models.ForeignKey("sports.Weight", on_delete=models.PROTECT, blank=False, null=True, help_text="체급아이디")
     years = models.PositiveIntegerField(
-        blank=False, null=False, validators=[MinValueValidator(1), MaxValueValidator(10)], help_text="스포츠경력(1-10)"
+        blank=False, null=True, validators=[MinValueValidator(1), MaxValueValidator(10)], help_text="스포츠경력(1-10)"
     )
     gym = models.ForeignKey(
-        "sports.Gym", on_delete=models.PROTECT, related_name="users", blank=False, null=False, help_text="체육관아이디"
+        "sports.Gym", on_delete=models.PROTECT, related_name="users", blank=False, null=True, help_text="체육관아이디"
     )
 
     yellow_card = models.PositiveIntegerField(default=0, blank=True, null=False, help_text="유효신고횟수")
