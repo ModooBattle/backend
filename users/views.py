@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import decorators, exceptions, permissions, status

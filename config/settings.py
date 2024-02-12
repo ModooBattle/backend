@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # api 문서
     "drf_yasg",
-    # "drf_spectacular",
     # 유저 인증
     "rest_framework",
     "rest_framework_simplejwt",
@@ -78,10 +77,7 @@ INSTALLED_APPS = [
 
 CRONJOBS = []
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)
-    # "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-}
+REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)}
 
 # SPECTACULAR_SETTINGS = {
 #     "TITLE": "Your Project API",
