@@ -129,7 +129,7 @@ class ChatRoomDetailView(APIView):
                 chatroom.talker1_unread_count += 1
             chatroom.save()
 
-            return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK, data={"chatroom_id": chatroom_id})
 
     @swagger_auto_schema(
         tags=[swagger_tag],
