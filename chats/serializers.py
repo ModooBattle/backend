@@ -18,7 +18,8 @@ class MessageSendSerializer(serializers.ModelSerializer):
 
 
 class ChatRoomDetailSerializer(serializers.Serializer):
-    chatroom_id = serializers.IntegerField()
+    chatroom_id = serializers.IntegerField(required=False)
+    other_talker_id = serializers.IntegerField(required=False, help_text="대화상대 id")
     page_no = serializers.IntegerField(help_text="페이지 No")
     length = serializers.IntegerField(help_text="페이지 당 데이터 수")
 

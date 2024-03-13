@@ -65,27 +65,51 @@ class ChatRoomListView(APIView):
 class ChatRoomDetailView(APIView):
     @swagger_auto_schema(
         tags=[swagger_tag],
-        operation_summary="채팅내용 조회",
+        operation_summary="채팅내용 조회(채팅룸을 알때 또는 채팅상대아이디를 알때)",
         query_serializer=ChatRoomDetailSerializer,
-        responses={200: "ok"},
+        responses={200: "ok", 201: "new chatroom created"},
     )
     def get(self, request):
+        """
+        chatroom_id 또는 other_talker_id 둘중 하나를 포함하여 요청보내기
+        other_talker_id로 요청할 경우 기존 대화방이 있을 경우(200) chatroom_id 입력과 같은 형식의 정보 보냄, 없을경우 대화방 새로 생성(201) 후 대화방 정보만 보냄
+        """
         user_id = request.user.id
-        chatroom_id = request.GET["chatroom_id"]
+        chatroom_id = request.GET.get("chatroom_id", None)
+        other_talker_id = request.GET.get("other_talker_id", None)
         page_no = request.GET["page_no"]
         length = request.GET["length"]
 
-        try:
-            messages = Message.objects.filter(chat_room=chatroom_id).order_by("-created_at")
+        if chatroom_id is None and other_talker_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="chatroom_id is None and other_talker_id is None")
 
-            paginator = Paginator(messages, int(length))
-            page_obj = paginator.get_page(int(page_no))
+        if chatroom_id is None:
+            try:
+                chatroom_id = ChatRoom.objects.get(
+                    (Q(talker1=user_id) & Q(talker2=other_talker_id))
+                    | (Q(talker1=other_talker_id) & Q(talker2=user_id))
+                )
+            except ChatRoom.DoesNotExist:
+                with transaction.atomic():
+                    try:
+                        receiver = User.objects.get(id=other_talker_id)
+                        sender = User.objects.get(id=user_id)
+                    except User.DoesNotExist:
+                        return Response(status=status.HTTP_404_NOT_FOUND, data="this receiver does not exist")
 
-            serializer = MessageSerializer(page_obj, many=True)
+                    chatroom = ChatRoom.objects.create(talker1=sender, talker2=receiver)
+                    serializer = ChatRoomListSerializer(chatroom)
 
-            return Response(status=status.HTTP_200_OK, data=serializer.data)
-        except ChatRoom.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND, data="this ChatRoom list does not exist")
+                    return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+        messages = Message.objects.filter(chat_room=chatroom_id).order_by("-created_at")
+
+        paginator = Paginator(messages, int(length))
+        page_obj = paginator.get_page(int(page_no))
+
+        serializer = MessageSerializer(page_obj, many=True)
+
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     @swagger_auto_schema(
         tags=[swagger_tag],
