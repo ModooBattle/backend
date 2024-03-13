@@ -49,16 +49,16 @@ def login(user):
 
     res = Response()
 
-    res.set_cookie(
-        key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
-        value=tokens["refresh"],
-        expires=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
-        domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-        httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-    )
-    res.data = {"access": tokens["access"], "user": user_info}
+    # res.set_cookie(
+    #     key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
+    #     value=tokens["refresh"],
+    #     expires=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
+    #     domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
+    #     secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+    #     httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
+    #     samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+    # )
+    res.data = {"refresh": tokens["refresh"], "access": tokens["access"], "user": user_info}
 
     res.status = status.HTTP_200_OK
 
@@ -212,16 +212,16 @@ class RegisterView(APIView):
                 user_info = serializers.UserInfoSerializer(user)
                 res = Response()
 
-                res.set_cookie(
-                    key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
-                    value=tokens["refresh"],
-                    expires=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
-                    domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
-                    secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-                    httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-                    samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-                )
-                res.data = {"access": tokens["access"], "user": user_info.data}
+                # res.set_cookie(
+                #     key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
+                #     value=tokens["refresh"],
+                #     expires=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
+                #     domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
+                #     secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+                #     httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
+                #     samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+                # )
+                res.data = {"refresh": tokens["refresh"], "access": tokens["access"], "user": user_info.data}
 
                 res.status = status.HTTP_201_CREATED
 
@@ -308,7 +308,9 @@ class CookieTokenRefreshView(mysimplejwt.TokenRefreshView):
 
 @decorators.permission_classes([permissions.IsAuthenticated])
 class LogoutView(APIView):
-    @swagger_auto_schema(tags=[swagger_tag], operation_summary="로그아웃", responses={200: "logout", 401: "unauthorized"})
+    @swagger_auto_schema(
+        tags=[swagger_tag], operation_summary="로그아웃", responses={200: "logout", 401: "unauthorized"}
+    )
     def post(self, request):
         try:
             refreshToken = request.COOKIES.get("refresh")
