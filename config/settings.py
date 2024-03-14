@@ -231,7 +231,7 @@ SIMPLE_JWT = {
     # Cookie name. Enables cookies if value is set.
     "AUTH_COOKIE_REFRESH": "refresh",
     # A string like "example.com", or None for standard domain cookie. 나중에 client domain 주소로 수정
-    "AUTH_COOKIE_DOMAIN": "modoobattle.com",
+    "AUTH_COOKIE_DOMAIN": ".pythonanywhere.com",
     # # Whether the auth cookies should be secure (https:// only).
     "AUTH_COOKIE_SECURE": True,
     # # Http only cookie flag.It's not fetch by javascript.
