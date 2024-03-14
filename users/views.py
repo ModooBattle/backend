@@ -59,7 +59,7 @@ def login(user):
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
         path=f"/; Partitioned",
     )
-    res.data = {"refresh": tokens["refresh"], "access": tokens["access"], "user": user_info}
+    res.data = {"access": tokens["access"], "user": user_info}
 
     res.status = status.HTTP_200_OK
 
@@ -223,7 +223,7 @@ class RegisterView(APIView):
                     samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
                     path=f"/; Partitioned",
                 )
-                res.data = {"refresh": tokens["refresh"], "access": tokens["access"], "user": user_info.data}
+                res.data = {"access": tokens["access"], "user": user_info.data}
 
                 res.status = status.HTTP_201_CREATED
 
@@ -292,9 +292,10 @@ class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
     refresh = None
 
     def validate(self, attrs):
-        attrs["refresh"] = self.context["request"].data.get("refresh", None)
+        attrs["refresh"] = self.context["request"].COOKIES.get("refresh")
+
         if attrs["refresh"] is None:
-            attrs["refresh"] = self.context["request"].COOKIES.get("refresh")
+            attrs["refresh"] = self.context["request"].data.get("refresh", None)
         if attrs["refresh"]:
             # user_id = RefreshToken(attrs["refresh"])["user_id"]
             # WebsocketConnect(user_id)
