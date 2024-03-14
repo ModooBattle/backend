@@ -291,8 +291,8 @@ class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
 
     def validate(self, attrs):
         attrs["refresh"] = self.context["request"].data.get("refresh", None)
-        print(self.context["request"])
-        print(attrs["refresh"])
+        if attrs["refresh"] is None:
+            attrs["refresh"] = self.context["request"].COOKIES.get("refresh")
         if attrs["refresh"]:
             # user_id = RefreshToken(attrs["refresh"])["user_id"]
             # WebsocketConnect(user_id)
