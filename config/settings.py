@@ -233,7 +233,7 @@ SIMPLE_JWT = {
     # A string like "example.com", or None for standard domain cookie. 나중에 client domain 주소로 수정
     "AUTH_COOKIE_DOMAIN": None,
     # # Whether the auth cookies should be secure (https:// only).
-    "AUTH_COOKIE_SECURE": False,
+    "AUTH_COOKIE_SECURE": True,
     # # Http only cookie flag.It's not fetch by javascript.
     "AUTH_COOKIE_HTTP_ONLY": True,
     "AUTH_COOKIE_PATH": "/",  # The path of the auth cookie.
