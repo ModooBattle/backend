@@ -229,7 +229,7 @@ SIMPLE_JWT = {
     # custom
     "AUTH_COOKIE": "access",
     # Cookie name. Enables cookies if value is set.
-    "AUTH_COOKIE_REFRESH": "refresh",
+    "AUTH_COOKIE_REFRESH": "refresh2",
     # A string like "example.com", or None for standard domain cookie. 나중에 client domain 주소로 수정
     "AUTH_COOKIE_DOMAIN": "minheeyoo88.pythonanywhere.com",
     # # Whether the auth cookies should be secure (https:// only).
