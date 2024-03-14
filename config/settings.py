@@ -25,7 +25,7 @@ SECRET_BASE_FILE = os.path.join(BASE_DIR, "secrets.json")
 secrets = json.loads(open(SECRET_BASE_FILE).read())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # SERVER_IP = secrets["SERVER"]["IP"]
 # SERVER_PORT = secrets["SERVER"]["PORT"]
