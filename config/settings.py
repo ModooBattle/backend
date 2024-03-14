@@ -243,7 +243,7 @@ SIMPLE_JWT = {
 
 
 # CORS 관련 추가
-CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000", "https://modoobattle.com"]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True  # 쿠키가 cross-site HTTP 요청에 포함될 수 있다
 CORS_ALLOW_METHODS = [
@@ -254,7 +254,7 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000", "https://modoobattle.com"]
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # 커스텀유저
