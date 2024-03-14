@@ -56,7 +56,7 @@ def login(user):
         domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
         secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        samesite=f'{settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"]}; Partitioned',
     )
     res.data = {"refresh": tokens["refresh"], "access": tokens["access"], "user": user_info}
 
